@@ -137,7 +137,6 @@
       );
 
       const BUCKET_NAME = "profile-pictures";
-
       let username = localStorage.getItem("username") || "";
       let currentChannel = "general";
 
@@ -151,9 +150,23 @@
         if (error) throw error;
 
         const bucket = (buckets || []).find(b => b.name === BUCKET_NAME);
-        if (!bucket) throw new Error(`Bucket ${BUCKET_NAME} does not exist`);
-        if (!bucket.public) throw new Error(`Bucket ${BUCKET_NAME} exists but is not public`);
+        if (!bucket) {
+          const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
+            public: true
+          });
+          if (createError) throw createError;
+          return;
+        }
+
+        if (!bucket.public) {
+          const { error: updateError } = await supabase.storage.updateBucket(BUCKET_NAME, {
+            public: true
+          });
+          if (updateError) throw updateError;
+        }
       }
+
+      await ensureProfileBucket();
 
       await supabase.from("profiles").upsert({
         username,
@@ -308,216 +321,7 @@
         container.appendChild(statsDiv);
       }
 
-      function createSnakeOverlay() {
-        let overlay = document.getElementById("snake-fullscreen-overlay");
-        if (overlay) return overlay;
-
-        overlay = document.createElement("div");
-        overlay.id = "snake-fullscreen-overlay";
-        overlay.style.cssText = `
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          background: rgba(0, 0, 0, 0.9);
-          z-index: 9999;
-          overflow: hidden;
-        `;
-
-        const closeBtn = document.createElement("button");
-        closeBtn.textContent = "❌";
-        closeBtn.style.cssText = `
-          position: absolute;
-          top: 8px;
-          right: 15px;
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          border: none;
-          cursor: pointer;
-          background: #7289da;
-          color: white;
-          font-size: 20px;
-          font-weight: bold;
-          z-index: 10000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        `;
-        closeBtn.onclick = () => overlay.remove();
-
-        const frame = document.createElement("iframe");
-        frame.src = "https://frogdafish.github.io/Snek";
-        frame.style.cssText = `
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          border: none;
-          display: block;
-        `;
-
-        overlay.appendChild(closeBtn);
-        overlay.appendChild(frame);
-        document.body.appendChild(overlay);
-        return overlay;
-      }
-
-      function createSlopeOverlay() {
-        let overlay = document.getElementById("slope-fullscreen-overlay");
-        if (overlay) return overlay;
-
-        overlay = document.createElement("div");
-        overlay.id = "slope-fullscreen-overlay";
-        overlay.style.cssText = `
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          background: rgba(0, 0, 0, 0.9);
-          z-index: 9999;
-          overflow: hidden;
-        `;
-
-        const closeBtn = document.createElement("button");
-        closeBtn.textContent = "❌";
-        closeBtn.style.cssText = `
-          position: absolute;
-          top: 8px;
-          right: 15px;
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          border: none;
-          cursor: pointer;
-          background: #7289da;
-          color: white;
-          font-size: 20px;
-          font-weight: bold;
-          z-index: 10000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        `;
-        closeBtn.onclick = () => overlay.remove();
-
-        const frame = document.createElement("iframe");
-        frame.src = "slope.html";
-        frame.style.cssText = `
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          border: none;
-          display: block;
-        `;
-
-        overlay.appendChild(closeBtn);
-        overlay.appendChild(frame);
-        document.body.appendChild(overlay);
-        return overlay;
-      }
-
-      function openSnakeFullscreen() { createSnakeOverlay(); }
-      function openSlopeFullscreen() { createSlopeOverlay(); }
-
-      async function loadShop() {
-        const container = document.getElementById("messages");
-        container.innerHTML = "Loading shop...";
-
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("coins, owned_snake, owned_slope")
-          .eq("username", username)
-          .single();
-
-        container.innerHTML = "";
-
-        const snakeDiv = document.createElement("div");
-        snakeDiv.className = "message";
-        snakeDiv.style.marginBottom = "20px";
-        snakeDiv.innerHTML = profile?.owned_snake ? `
-          <strong>🐍 Snake Game</strong><br>
-          Play the classic Snake game!<br>
-          <button id="playSnakeBtn" class="shop-btn">Play Snake (Fullscreen)</button>
-        ` : `
-          <strong>🐍 Snake Game</strong><br>
-          Play the classic Snake game! Cost: 25 coins<br>
-          <button id="buySnakeBtn" class="shop-btn">Buy Snake (25 coins)</button>
-        `;
-        container.appendChild(snakeDiv);
-
-        const slopeDiv = document.createElement("div");
-        slopeDiv.className = "message";
-        slopeDiv.innerHTML = profile?.owned_slope ? `
-          <strong>📈 Slope Game</strong><br>
-          Fast-paced endless runner down a slope!<br>
-          <button id="playSlopeBtn" class="shop-btn">Play Slope (Fullscreen)</button>
-        ` : `
-          <strong>📈 Slope Game</strong><br>
-          Fast-paced endless runner down a slope! Cost: 50 coins<br>
-          <button id="buySlopeBtn" class="shop-btn">Buy Slope (50 coins)</button>
-        `;
-        container.appendChild(slopeDiv);
-
-        if (profile?.owned_snake) {
-          document.getElementById("playSnakeBtn").onclick = openSnakeFullscreen;
-        } else {
-          document.getElementById("buySnakeBtn").onclick = async () => {
-            const { data: p } = await supabase
-              .from("profiles")
-              .select("coins, owned_snake")
-              .eq("username", username)
-              .single();
-            if (!p) return;
-            if (p.owned_snake) return loadShop();
-            if (p.coins < 25) return alert("You need 25 coins to buy Snake!");
-
-            const { error } = await supabase
-              .from("profiles")
-              .update({ coins: p.coins - 25, owned_snake: true })
-              .eq("username", username);
-
-            if (error) return alert("Purchase failed.");
-            alert("You bought Snake! Opening...");
-            openSnakeFullscreen();
-            await loadShop();
-          };
-        }
-
-        if (profile?.owned_slope) {
-          document.getElementById("playSlopeBtn").onclick = openSlopeFullscreen;
-        } else {
-          document.getElementById("buySlopeBtn").onclick = async () => {
-            const { data: p } = await supabase
-              .from("profiles")
-              .select("coins, owned_slope")
-              .eq("username", username)
-              .single();
-            if (!p) return;
-            if (p.owned_slope) return loadShop();
-            if (p.coins < 50) return alert("You need 50 coins to buy Slope!");
-
-            const { error } = await supabase
-              .from("profiles")
-              .update({ coins: p.coins - 50, owned_slope: true })
-              .eq("username", username);
-
-            if (error) return alert("Purchase failed.");
-            alert("You bought Slope! Opening...");
-            openSlopeFullscreen();
-            await loadShop();
-          };
-        }
-      }
-
       async function uploadProfileImage(file) {
-        await ensureProfileBucket();
-
         const ext = (file.name.split(".").pop() || "png").toLowerCase();
         const path = `profiles/${username}-${Date.now()}.${ext}`;
 
@@ -531,10 +335,7 @@
 
         if (uploadError) throw uploadError;
 
-        const { data } = supabase.storage
-          .from(BUCKET_NAME)
-          .getPublicUrl(path);
-
+        const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
         return data.publicUrl;
       }
 
@@ -628,7 +429,7 @@
               await loadMessagesForChannel(currentChannel);
             }
           } catch (e) {
-            alert(e.message || "Upload failed. Make sure the bucket exists and is public.");
+            alert(e.message || "Upload failed.");
           }
         };
       }
@@ -650,6 +451,137 @@
         else if (channel === "shop") loadShop();
         else loadMessagesForChannel(channel);
       }
+
+      async function loadShop() {
+        const container = document.getElementById("messages");
+        container.innerHTML = "Loading shop...";
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("coins, owned_snake, owned_slope")
+          .eq("username", username)
+          .single();
+
+        container.innerHTML = "";
+
+        const snakeDiv = document.createElement("div");
+        snakeDiv.className = "message";
+        snakeDiv.style.marginBottom = "20px";
+        snakeDiv.innerHTML = profile?.owned_snake ? `
+          <strong>🐍 Snake Game</strong><br>
+          Play the classic Snake game!<br>
+          <button id="playSnakeBtn" class="shop-btn">Play Snake (Fullscreen)</button>
+        ` : `
+          <strong>🐍 Snake Game</strong><br>
+          Play the classic Snake game! Cost: 25 coins<br>
+          <button id="buySnakeBtn" class="shop-btn">Buy Snake (25 coins)</button>
+        `;
+        container.appendChild(snakeDiv);
+
+        const slopeDiv = document.createElement("div");
+        slopeDiv.className = "message";
+        slopeDiv.innerHTML = profile?.owned_slope ? `
+          <strong>📈 Slope Game</strong><br>
+          Fast-paced endless runner down a slope!<br>
+          <button id="playSlopeBtn" class="shop-btn">Play Slope (Fullscreen)</button>
+        ` : `
+          <strong>📈 Slope Game</strong><br>
+          Fast-paced endless runner down a slope! Cost: 50 coins<br>
+          <button id="buySlopeBtn" class="shop-btn">Buy Slope (50 coins)</button>
+        `;
+        container.appendChild(slopeDiv);
+
+        if (profile?.owned_snake) {
+          document.getElementById("playSnakeBtn").onclick = openSnakeFullscreen;
+        } else {
+          document.getElementById("buySnakeBtn").onclick = async () => {
+            const { data: p } = await supabase
+              .from("profiles")
+              .select("coins, owned_snake")
+              .eq("username", username)
+              .single();
+            if (!p) return;
+            if (p.owned_snake) return loadShop();
+            if (p.coins < 25) return alert("You need 25 coins to buy Snake!");
+
+            const { error } = await supabase
+              .from("profiles")
+              .update({ coins: p.coins - 25, owned_snake: true })
+              .eq("username", username);
+
+            if (error) return alert("Purchase failed.");
+            alert("You bought Snake! Opening...");
+            openSnakeFullscreen();
+            await loadShop();
+          };
+        }
+
+        if (profile?.owned_slope) {
+          document.getElementById("playSlopeBtn").onclick = openSlopeFullscreen;
+        } else {
+          document.getElementById("buySlopeBtn").onclick = async () => {
+            const { data: p } = await supabase
+              .from("profiles")
+              .select("coins, owned_slope")
+              .eq("username", username)
+              .single();
+            if (!p) return;
+            if (p.owned_slope) return loadShop();
+            if (p.coins < 50) return alert("You need 50 coins to buy Slope!");
+
+            const { error } = await supabase
+              .from("profiles")
+              .update({ coins: p.coins - 50, owned_slope: true })
+              .eq("username", username);
+
+            if (error) return alert("Purchase failed.");
+            alert("You bought Slope! Opening...");
+            openSlopeFullscreen();
+            await loadShop();
+          };
+        }
+      }
+
+      function createSnakeOverlay() {
+        let overlay = document.getElementById("snake-fullscreen-overlay");
+        if (overlay) return overlay;
+        overlay = document.createElement("div");
+        overlay.id = "snake-fullscreen-overlay";
+        overlay.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.9);z-index:9999;overflow:hidden;";
+        const closeBtn = document.createElement("button");
+        closeBtn.textContent = "❌";
+        closeBtn.style.cssText = "position:absolute;top:8px;right:15px;width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;background:#7289da;color:white;font-size:20px;font-weight:bold;z-index:10000;display:flex;align-items:center;justify-content:center;";
+        closeBtn.onclick = () => overlay.remove();
+        const frame = document.createElement("iframe");
+        frame.src = "https://frogdafish.github.io/Snek";
+        frame.style.cssText = "position:absolute;top:0;left:0;width:100vw;height:100vh;border:none;display:block;";
+        overlay.appendChild(closeBtn);
+        overlay.appendChild(frame);
+        document.body.appendChild(overlay);
+        return overlay;
+      }
+
+      function createSlopeOverlay() {
+        let overlay = document.getElementById("slope-fullscreen-overlay");
+        if (overlay) return overlay;
+        overlay = document.createElement("div");
+        overlay.id = "slope-fullscreen-overlay";
+        overlay.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.9);z-index:9999;overflow:hidden;";
+        const closeBtn = document.createElement("button");
+        closeBtn.textContent = "❌";
+        closeBtn.style.cssText = "position:absolute;top:8px;right:15px;width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;background:#7289da;color:white;font-size:20px;font-weight:bold;z-index:10000;display:flex;align-items:center;justify-content:center;";
+        closeBtn.onclick = () => overlay.remove();
+        const frame = document.createElement("iframe");
+        frame.src = "slope.html";
+        frame.style.cssText = "position:absolute;top:0;left:0;width:100vw;height:100vh;border:none;display:block;";
+        overlay.appendChild(closeBtn);
+        overlay.appendChild(frame);
+        document.body.appendChild(overlay);
+        return overlay;
+      }
+
+      function openSnakeFullscreen() { createSnakeOverlay(); }
+      function openSlopeFullscreen() { createSlopeOverlay(); }
 
       window.sendMessage = sendMessage;
       window.switchChannel = switchChannel;
