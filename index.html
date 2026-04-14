@@ -50,14 +50,9 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.35);
     }
 
-    .profile-modal h3 {
-      margin: 0 0 12px;
-      font-size: 18px;
-    }
+    .profile-modal h3 { margin: 0 0 12px; font-size: 18px; }
 
-    .profile-field {
-      margin-bottom: 12px;
-    }
+    .profile-field { margin-bottom: 12px; }
 
     .profile-field label {
       display: block;
@@ -107,13 +102,8 @@
       margin-left: 0;
     }
 
-    .cancel-btn {
-      background: #555;
-    }
-
-    .cancel-btn:hover {
-      background: #666;
-    }
+    .cancel-btn { background: #555; }
+    .cancel-btn:hover { background: #666; }
   </style>
 </head>
 <body>
@@ -165,7 +155,7 @@
         muted_until: null,
         mute_reason: null,
         profile_picture: null
-      });
+      }, { onConflict: "username" });
 
       function getFallbackAvatar(name) {
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=7289da&color=fff&rounded=true&size=64`;
@@ -216,9 +206,7 @@
           profileMap[p.username] = p.profile_picture;
         });
 
-        data.forEach((msg) => {
-          addMessage(msg.username, msg.text, profileMap[msg.username] || null);
-        });
+        data.forEach((msg) => addMessage(msg.username, msg.text, profileMap[msg.username] || null));
       }
 
       async function sendMessage() {
@@ -237,20 +225,14 @@
           .eq("username", username)
           .single();
 
-        const isMuted = profile?.muted_until !== null;
-        if (isMuted) {
-          const reason = profile.mute_reason || "No reason specified";
-          alert(`You are muted and cannot send messages!\n\nReason: ${reason}`);
+        if (profile?.muted_until !== null) {
+          alert(`You are muted and cannot send messages!\n\nReason: ${profile.mute_reason || "No reason specified"}`);
           return;
         }
 
         const { error } = await supabase
           .from("messages")
-          .insert({
-            channel: currentChannel,
-            username,
-            text
-          });
+          .insert({ channel: currentChannel, username, text });
 
         if (error) {
           alert("Failed to send message.");
@@ -341,9 +323,7 @@
           align-items: center;
           justify-content: center;
         `;
-        closeBtn.onclick = () => {
-          document.body.removeChild(overlay);
-        };
+        closeBtn.onclick = () => overlay.remove();
 
         const frame = document.createElement("iframe");
         frame.src = "https://frogdafish.github.io/Snek";
@@ -400,9 +380,7 @@
           align-items: center;
           justify-content: center;
         `;
-        closeBtn.onclick = () => {
-          document.body.removeChild(overlay);
-        };
+        closeBtn.onclick = () => overlay.remove();
 
         const frame = document.createElement("iframe");
         frame.src = "slope.html";
@@ -422,13 +400,8 @@
         return overlay;
       }
 
-      function openSnakeFullscreen() {
-        createSnakeOverlay();
-      }
-
-      function openSlopeFullscreen() {
-        createSlopeOverlay();
-      }
+      function openSnakeFullscreen() { createSnakeOverlay(); }
+      function openSlopeFullscreen() { createSlopeOverlay(); }
 
       async function loadShop() {
         const container = document.getElementById("messages");
@@ -445,6 +418,7 @@
         const snakeDiv = document.createElement("div");
         snakeDiv.className = "message";
         snakeDiv.style.marginBottom = "20px";
+
         if (profile?.owned_snake) {
           snakeDiv.innerHTML = `
             <strong>🐍 Snake Game</strong><br>
@@ -462,6 +436,7 @@
 
         const slopeDiv = document.createElement("div");
         slopeDiv.className = "message";
+
         if (profile?.owned_slope) {
           slopeDiv.innerHTML = `
             <strong>📈 Slope Game</strong><br>
@@ -487,29 +462,15 @@
               .eq("username", username)
               .single();
             if (!p) return;
-
-            if (p.owned_snake) {
-              alert("You already own Snake!");
-              await loadShop();
-              return;
-            }
-            if (p.coins < 25) {
-              alert("You need 25 coins to buy Snake!");
-              return;
-            }
+            if (p.owned_snake) return loadShop();
+            if (p.coins < 25) return alert("You need 25 coins to buy Snake!");
 
             const { error } = await supabase
               .from("profiles")
-              .update({
-                coins: p.coins - 25,
-                owned_snake: true
-              })
+              .update({ coins: p.coins - 25, owned_snake: true })
               .eq("username", username);
 
-            if (error) {
-              alert("Purchase failed.");
-              return;
-            }
+            if (error) return alert("Purchase failed.");
 
             alert("You bought Snake! Opening...");
             openSnakeFullscreen();
@@ -527,35 +488,42 @@
               .eq("username", username)
               .single();
             if (!p) return;
-
-            if (p.owned_slope) {
-              alert("You already own Slope!");
-              await loadShop();
-              return;
-            }
-            if (p.coins < 50) {
-              alert("You need 50 coins to buy Slope!");
-              return;
-            }
+            if (p.owned_slope) return loadShop();
+            if (p.coins < 50) return alert("You need 50 coins to buy Slope!");
 
             const { error } = await supabase
               .from("profiles")
-              .update({
-                coins: p.coins - 50,
-                owned_slope: true
-              })
+              .update({ coins: p.coins - 50, owned_slope: true })
               .eq("username", username);
 
-            if (error) {
-              alert("Purchase failed.");
-              return;
-            }
+            if (error) return alert("Purchase failed.");
 
             alert("You bought Slope! Opening...");
             openSlopeFullscreen();
             await loadShop();
           };
         }
+      }
+
+      async function uploadProfileImage(file) {
+        const ext = (file.name.split(".").pop() || "png").toLowerCase();
+        const path = `profiles/${username}-${Date.now()}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("profile-pictures")
+          .upload(path, file, {
+            cacheControl: "3600",
+            upsert: true,
+            contentType: file.type || "image/png"
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage
+          .from("profile-pictures")
+          .getPublicUrl(path);
+
+        return data.publicUrl;
       }
 
       async function openProfileEditor() {
@@ -588,20 +556,16 @@
             </div>
           </div>
         `;
-
         document.body.appendChild(overlay);
 
         const fileInput = document.getElementById("profileFile");
         const preview = document.getElementById("profilePreview");
 
-        if (profile?.profile_picture) {
-          preview.style.display = "block";
-        }
+        if (profile?.profile_picture) preview.style.display = "block";
 
         fileInput.addEventListener("change", () => {
           const file = fileInput.files?.[0];
           if (!file) return;
-
           const reader = new FileReader();
           reader.onload = () => {
             preview.src = reader.result;
@@ -610,54 +574,48 @@
           reader.readAsDataURL(file);
         });
 
-        document.getElementById("cancelProfileBtn").onclick = () => {
-          overlay.remove();
-        };
+        document.getElementById("cancelProfileBtn").onclick = () => overlay.remove();
 
         document.getElementById("saveProfileBtn").onclick = async () => {
-          const newUsername = document.getElementById("profileUsername").value.trim();
-          const file = fileInput.files?.[0];
+          try {
+            const newUsername = document.getElementById("profileUsername").value.trim();
+            const file = fileInput.files?.[0];
 
-          let newProfilePicture = profile?.profile_picture || null;
+            let newProfilePicture = profile?.profile_picture || null;
+            if (file) {
+              newProfilePicture = await uploadProfileImage(file);
+            }
 
-          if (file) {
-            newProfilePicture = await new Promise((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result);
-              reader.onerror = reject;
-              reader.readAsDataURL(file);
-            });
-          }
+            const updates = { profile_picture: newProfilePicture };
 
-          const updates = {
-            profile_picture: newProfilePicture
-          };
+            if (newUsername && newUsername !== username) {
+              updates.username = newUsername;
+            }
 
-          if (newUsername && newUsername !== username) {
-            updates.username = newUsername;
-          }
+            const { error } = await supabase
+              .from("profiles")
+              .update(updates)
+              .eq("username", username);
 
-          const { error } = await supabase
-            .from("profiles")
-            .update(updates)
-            .eq("username", username);
+            if (error) {
+              alert("Failed to update profile.");
+              return;
+            }
 
-          if (error) {
-            alert("Failed to update profile.");
-            return;
-          }
+            if (newUsername && newUsername !== username) {
+              username = newUsername;
+              localStorage.setItem("username", username);
+            }
 
-          if (newUsername && newUsername !== username) {
-            username = newUsername;
-            localStorage.setItem("username", username);
-          }
+            overlay.remove();
+            alert("Profile updated!");
 
-          overlay.remove();
-          alert("Profile updated!");
-
-          if (currentChannel === "stats") await loadStats();
-          if (currentChannel === "general" || currentChannel === "coding" || currentChannel === "gaming") {
-            await loadMessagesForChannel(currentChannel);
+            if (currentChannel === "stats") await loadStats();
+            if (currentChannel === "general" || currentChannel === "coding" || currentChannel === "gaming") {
+              await loadMessagesForChannel(currentChannel);
+            }
+          } catch (e) {
+            alert("Upload failed. Make sure your Supabase Storage bucket exists and is public.");
           }
         };
       }
@@ -671,19 +629,13 @@
 
         const input = document.getElementById("messageInput");
         input.placeholder =
-          channel === "stats" || channel === "shop"
-            ? ""
-            : "Message #" + channel;
+          channel === "stats" || channel === "shop" ? "" : "Message #" + channel;
 
         document.getElementById("messages").innerHTML = "";
 
-        if (channel === "stats") {
-          loadStats();
-        } else if (channel === "shop") {
-          loadShop();
-        } else {
-          loadMessagesForChannel(channel);
-        }
+        if (channel === "stats") loadStats();
+        else if (channel === "shop") loadShop();
+        else loadMessagesForChannel(channel);
       }
 
       window.sendMessage = sendMessage;
