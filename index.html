@@ -4,43 +4,41 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Discord</title>
-  <link rel="icon" href="favicon.png" type="image/png" />
   <style>
-    body { margin:0; font-family:'Segoe UI',sans-serif; background:#36393f; color:white; display:flex; height:100vh; overflow:hidden; }
-    .sidebar { width:240px; background:#2f3136; padding:15px; display:flex; flex-direction:column; box-sizing:border-box; }
-    .sidebar h3 { color:#8e9297; font-size:12px; margin:0 0 10px; text-transform:uppercase; }
-    .channel { padding:6px 10px; border-radius:4px; cursor:pointer; color:#b9bbbe; transition:.15s; user-select:none; }
-    .channel:hover { background:#40444b; color:white; }
-    .edit-profile { margin-top:auto; background:#40444b; text-align:center; padding:8px; border-radius:4px; cursor:pointer; user-select:none; }
-    .edit-profile:hover { background:#5865f2; }
-    .chat { flex:1; display:flex; flex-direction:column; min-width:0; }
-    .header { padding:15px; background:#2f3136; font-weight:bold; border-bottom:1px solid #202225; }
-    .messages { flex:1; padding:20px; overflow-y:auto; box-sizing:border-box; }
-    .message { margin-bottom:10px; }
-    .message-row { display:flex; align-items:flex-start; gap:8px; }
-    .avatar { width:32px; height:32px; border-radius:50%; object-fit:cover; background:#5865f2; flex-shrink:0; margin-top:2px; border:1px solid rgba(255,255,255,0.15); }
-    .message-content { line-height:1.35; word-break:break-word; }
-    .username { font-weight:bold; cursor:pointer; color:#7289da; }
-    .username:hover { text-decoration:underline; }
-    .input-area { padding:10px 15px; background:#40444b; display:flex; gap:10px; }
-    input { flex:1; padding:10px; border-radius:4px; border:none; background:#303339; color:white; outline:none; }
-    button { padding:10px 16px; border-radius:4px; border:none; background:#7289da; color:white; cursor:pointer; }
-    .typing-indicator { font-size:12px; color:#b9bbbe; margin-left:15px; margin-bottom:8px; font-style:italic; }
-    .mute-status { color:#ff6b6b; font-weight:bold; }
-    button.shop-btn { background:#43b581; margin:5px 0; padding:8px 16px; }
-    button.shop-btn:hover { background:#3da674; }
-    .profile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: flex; align-items: center; justify-content: center; z-index: 10000; }
-    .profile-modal { width: 360px; max-width: calc(100vw - 30px); background: #2f3136; border: 1px solid #202225; border-radius: 12px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
-    .profile-modal h3 { margin: 0 0 12px; font-size: 18px; }
-    .profile-field { margin-bottom: 12px; }
-    .profile-field label { display: block; margin-bottom: 6px; color: #ddd; font-size: 14px; }
-    .profile-field input[type="text"] { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: none; background: #40444b; color: white; outline: none; }
-    .profile-field input[type="file"] { width: 100%; box-sizing: border-box; color: white; background: transparent; padding: 6px 0; }
-    .profile-preview { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; display: none; margin-top: 10px; border: 2px solid #7289da; background: #5865f2; }
-    .profile-actions { display: flex; gap: 10px; margin-top: 14px; }
-    .profile-actions button { flex: 1; }
-    .cancel-btn { background: #555; }
-    .cancel-btn:hover { background: #666; }
+    body{margin:0;font-family:Segoe UI,sans-serif;background:#36393f;color:#fff;display:flex;height:100vh;overflow:hidden}
+    .sidebar{width:240px;background:#2f3136;padding:15px;display:flex;flex-direction:column;box-sizing:border-box}
+    .sidebar h3{color:#8e9297;font-size:12px;margin:0 0 10px;text-transform:uppercase}
+    .channel,.edit-profile,button{cursor:pointer}
+    .channel{padding:6px 10px;border-radius:4px;color:#b9bbbe;transition:.15s;user-select:none}
+    .channel:hover{background:#40444b;color:#fff}
+    .edit-profile{margin-top:auto;background:#40444b;text-align:center;padding:8px;border-radius:4px;user-select:none}
+    .edit-profile:hover{background:#5865f2}
+    .chat{flex:1;display:flex;flex-direction:column;min-width:0}
+    .header{padding:15px;background:#2f3136;font-weight:bold;border-bottom:1px solid #202225}
+    .messages{flex:1;padding:20px;overflow-y:auto;box-sizing:border-box}
+    .message{margin-bottom:10px}
+    .message-row{display:flex;align-items:flex-start;gap:8px}
+    .avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;background:#5865f2;flex-shrink:0;margin-top:2px;border:1px solid rgba(255,255,255,.15)}
+    .message-content{line-height:1.35;word-break:break-word}
+    .username{font-weight:bold;color:#7289da}
+    .input-area{padding:10px 15px;background:#40444b;display:flex;gap:10px}
+    input{flex:1;padding:10px;border-radius:4px;border:none;background:#303339;color:#fff;outline:none}
+    button{padding:10px 16px;border-radius:4px;border:none;background:#7289da;color:#fff}
+    .typing-indicator{font-size:12px;color:#b9bbbe;margin:0 0 8px 15px;font-style:italic}
+    .shop-btn{background:#43b581;margin:5px 0;padding:8px 16px}
+    .profile-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:10000}
+    .profile-modal{width:360px;max-width:calc(100vw - 30px);background:#2f3136;border:1px solid #202225;border-radius:12px;padding:18px}
+    .profile-field{margin-bottom:12px}
+    .profile-field label{display:block;margin-bottom:6px;color:#ddd;font-size:14px}
+    .profile-field input[type=text]{width:100%;box-sizing:border-box;padding:10px;border-radius:6px;border:none;background:#40444b;color:#fff;outline:none}
+    .profile-actions{display:flex;gap:10px;margin-top:14px}
+    .profile-actions button{flex:1}
+    .cancel-btn{background:#555}
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;align-items:center;justify-content:center}
+    .overlay-box{width:min(980px,96vw);height:min(680px,92vh);background:#1e1f22;border-radius:12px;position:relative;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .overlay-box iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+    .close-btn{position:absolute;top:10px;right:10px;z-index:10001;width:40px;height:40px;border-radius:50%;border:none;background:#7289da;color:#fff;font-size:20px}
+    canvas{touch-action:none}
   </style>
 </head>
 <body>
@@ -53,7 +51,6 @@
     <div class="channel" data-channel="shop"># shop</div>
     <div class="edit-profile" id="editProfileBtn">⚙ Edit Profile</div>
   </div>
-
   <div class="chat">
     <div class="header" id="channelName"># general</div>
     <div class="messages" id="messages"></div>
@@ -63,501 +60,145 @@
     </div>
     <div id="typingIndicator" class="typing-indicator"></div>
   </div>
+  <script>
+    const $ = id => document.getElementById(id);
+    let currentChannel = 'general';
+    let username = localStorage.getItem('username') || prompt('Enter username:') || 'Guest';
+    localStorage.setItem('username', username);
+    const storeKey = 'demoChatData_v2';
+    const loadStore = () => JSON.parse(localStorage.getItem(storeKey) || '{"profiles":{},"messages":[]}');
+    const saveStore = s => localStorage.setItem(storeKey, JSON.stringify(s));
+    const getFallbackAvatar = n => `https://ui-avatars.com/api/?name=${encodeURIComponent(n)}&background=7289da&color=fff&rounded=true&size=64`;
+    const setAvatarFallback = (img, n) => img.onerror = () => { img.onerror = null; img.src = getFallbackAvatar(n); };
 
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
-    const supabase = createClient(
-      "https://adrusttuicogkeplrcac.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkcnVzdHR1aWNvZ2tlcGxyY2FjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5NDQxMjUsImV4cCI6MjA4NjUyMDEyNX0.XnfYHjY0lR5JMBX855xsOtiC44oOW_bRtZbGmSo8ZB0"
-    );
-
-    const BUCKET_NAME = "profile-pictures";
-    const $ = (id) => document.getElementById(id);
-    let username = localStorage.getItem("username") || "";
-    let currentChannel = "general";
-
-    function getFallbackAvatar(name) {
-      return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=7289da&color=fff&rounded=true&size=64`;
+    function addMessage(user, text, avatarUrl=null){
+      const div=document.createElement('div'); div.className='message';
+      div.innerHTML=`<div class="message-row"><img class="avatar" src="${avatarUrl||getFallbackAvatar(user)}"><div class="message-content"><span class="username">${user}</span> ${text}</div></div>`;
+      setAvatarFallback(div.querySelector('.avatar'), user);
+      $('messages').appendChild(div); $('messages').scrollTop = $('messages').scrollHeight;
     }
 
-    function setAvatarFallback(img, fallbackName) {
-      img.onerror = () => {
-        img.onerror = null;
-        img.src = getFallbackAvatar(fallbackName);
-      };
+    function renderChannelHeader(channel){
+      $('channelName').textContent = channel === 'stats' ? '# stats' : channel === 'shop' ? '# shop' : `# ${channel}`;
+      $('messageInput').placeholder = (channel === 'stats' || channel === 'shop') ? '' : `Message #${channel}`;
     }
 
-    function addMessage(usernameText, messageText, avatarUrl = null) {
-      const div = document.createElement("div");
-      div.className = "message";
-      const src = avatarUrl || getFallbackAvatar(usernameText);
-      div.innerHTML = `
-        <div class="message-row">
-          <img class="avatar" src="${src}" alt="avatar">
-          <div class="message-content">
-            <span class="username">${usernameText}</span> ${messageText}
-          </div>
-        </div>
-      `;
-      setAvatarFallback(div.querySelector(".avatar"), usernameText);
-      const container = $("messages");
-      container.appendChild(div);
-      container.scrollTop = container.scrollHeight;
+    function ensureProfile(){
+      const s=loadStore();
+      if(!s.profiles[username]) s.profiles[username]={username, xp:0, level:1, coins:0, profile_picture:null, muted_until:null, mute_reason:null, owned_snake:false, owned_slope:false};
+      saveStore(s);
     }
 
-    async function ensureProfileBucket() {
-      const { data: buckets, error } = await supabase.storage.listBuckets();
-      if (error) throw error;
-      const bucket = (buckets || []).find(b => b.name === BUCKET_NAME);
-      if (!bucket) {
-        const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, { public: true });
-        if (createError) throw createError;
-        return;
-      }
-      if (!bucket.public) {
-        const { error: updateError } = await supabase.storage.updateBucket(BUCKET_NAME, { public: true });
-        if (updateError) throw updateError;
-      }
+    function loadMessages(channel){
+      const s=loadStore();
+      $('messages').innerHTML='';
+      const msgs=s.messages.filter(m=>m.channel===channel);
+      if(!msgs.length) addMessage('System', 'No messages yet.');
+      msgs.forEach(m => addMessage(m.username, m.text, s.profiles[m.username]?.profile_picture || null));
     }
 
-    async function init() {
-      if (!username) {
-        username = prompt("Enter username:") || "Guest";
-        localStorage.setItem("username", username);
-      }
-
-      try {
-        await ensureProfileBucket();
-      } catch (e) {
-        addMessage("System", `Storage setup failed: ${e.message}`);
-      }
-
-      try {
-        await supabase.from("profiles").upsert({
-          username,
-          bio: "",
-          xp: 0,
-          level: 1,
-          coins: 0,
-          owned_snake: false,
-          owned_slope: false,
-          muted_until: null,
-          mute_reason: null,
-          profile_picture: null
-        }, { onConflict: "username" });
-      } catch (e) {
-        addMessage("System", `Profile setup failed: ${e.message}`);
-      }
-
-      bindUI();
-      await loadMessagesForChannel(currentChannel);
+    function sendMessage(){
+      const text=$('messageInput').value.trim(); if(!text) return;
+      if(currentChannel==='stats' || currentChannel==='shop') return alert('You cannot send messages in this channel!');
+      const s=loadStore();
+      const p=s.profiles[username];
+      if(p?.muted_until) return alert(`You are muted!\n\nReason: ${p.mute_reason || 'No reason specified'}`);
+      s.messages.push({channel: currentChannel, username, text, created_at: new Date().toISOString()});
+      saveStore(s);
+      $('messageInput').value='';
+      loadMessages(currentChannel);
     }
 
-    function bindUI() {
-      $("sendBtn").addEventListener("click", sendMessage);
-      $("messageInput").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") sendMessage();
-      });
-      $("editProfileBtn").addEventListener("click", openProfileEditor);
-      document.querySelectorAll(".channel").forEach(el => {
-        el.addEventListener("click", () => switchChannel(el.dataset.channel));
-      });
-      window.openProfileEditor = openProfileEditor;
-      window.switchChannel = switchChannel;
-      window.sendMessage = sendMessage;
-      window.openSnakeFullscreen = openSnakeFullscreen;
-      window.openSlopeFullscreen = openSlopeFullscreen;
+    function loadStats(){
+      const s=loadStore(); const p=s.profiles[username]; $('messages').innerHTML='';
+      const xpToNext=Math.max(p.level*100-p.xp,0);
+      addMessage('System', `👤 ${p.username}<br><strong>⭐ Level:</strong> ${p.level}<br><strong>⚡ XP:</strong> ${p.xp}<br><strong>XP to next level:</strong> ${xpToNext}<br><strong>💰 Coins:</strong> ${p.coins}<br><strong>🐍 Owns Snake:</strong> ${p.owned_snake ? 'Yes' : 'No'}<br><strong>📈 Owns Slope:</strong> ${p.owned_slope ? 'Yes' : 'No'}` , p.profile_picture || null);
     }
 
-    async function loadMessagesForChannel(channel) {
-      const container = $("messages");
-      container.innerHTML = "Loading messages...";
-
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("channel", channel)
-        .order("created_at", { ascending: true });
-
-      container.innerHTML = "";
-
-      if (error || !data) {
-        addMessage("System", "Could not load messages.");
-        return;
-      }
-
-      const usernames = [...new Set(data.map(msg => msg.username))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("username, profile_picture")
-        .in("username", usernames);
-
-      const profileMap = {};
-      (profiles || []).forEach(p => profileMap[p.username] = p.profile_picture);
-      data.forEach(msg => addMessage(msg.username, msg.text, profileMap[msg.username] || null));
+    function openOverlay(title, innerHTML){
+      const old=document.querySelector('.overlay'); if(old) old.remove();
+      const o=document.createElement('div'); o.className='overlay';
+      o.innerHTML=`<div class="overlay-box"><button class="close-btn">✖</button>${innerHTML}</div>`;
+      o.querySelector('.close-btn').onclick=()=>o.remove();
+      document.body.appendChild(o);
+      return o;
     }
 
-    async function sendMessage() {
-      const input = $("messageInput");
-      const text = input.value.trim();
-      if (!text) return;
-      if (currentChannel === "stats" || currentChannel === "shop") {
-        alert("You cannot send messages in this channel!");
-        return;
-      }
-
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("muted_until, mute_reason")
-        .eq("username", username)
-        .single();
-
-      if (error && error.code !== "PGRST116") {
-        alert("Could not verify mute status.");
-        return;
-      }
-
-      if (profile?.muted_until !== null) {
-        alert(`You are muted and cannot send messages!\n\nReason: ${profile.mute_reason || "No reason specified"}`);
-        return;
-      }
-
-      const { error: insertError } = await supabase
-        .from("messages")
-        .insert({ channel: currentChannel, username, text });
-
-      if (insertError) {
-        alert("Failed to send message.");
-        return;
-      }
-
-      input.value = "";
-      await loadMessagesForChannel(currentChannel);
-    }
-
-    async function loadStats() {
-      const container = $("messages");
-      container.innerHTML = "Loading stats...";
-
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("username,xp,level,coins,owned_snake,owned_slope,muted_until,mute_reason,profile_picture")
-        .eq("username", username)
-        .single();
-
-      container.innerHTML = "";
-
-      if (error || !profile) {
-        addMessage("System", "Could not load stats.");
-        return;
-      }
-
-      const xpToNext = Math.max(profile.level * 100 - profile.xp, 0);
-      const isMuted = profile.muted_until !== null;
-      const muteStatus = isMuted
-        ? `<span class="mute-status">🔇 MUTED (until cleared)<br><em>${profile.mute_reason || "No reason specified"}</em></span>`
-        : "✅ Not muted";
-
-      const statsDiv = document.createElement("div");
-      statsDiv.className = "message";
-      statsDiv.innerHTML = `
-        <div class="message-row">
-          <img class="avatar" src="${profile.profile_picture || getFallbackAvatar(profile.username)}" alt="avatar">
-          <div class="message-content">
-            <strong>👤 ${profile.username}</strong><br>
-            <strong>⭐ Level:</strong> ${profile.level}<br>
-            <strong>⚡ XP:</strong> ${profile.xp}<br>
-            <strong>XP to next level:</strong> ${xpToNext}<br>
-            <strong>💰 Coins:</strong> ${profile.coins}<br>
-            <strong>🐍 Owns Snake:</strong> ${profile.owned_snake ? "Yes" : "No"}<br>
-            <strong>📈 Owns Slope:</strong> ${profile.owned_slope ? "Yes" : "No"}<br>
-            <strong>🔇 Mute Status:</strong> ${muteStatus}
-          </div>
-        </div>
-      `;
-      setAvatarFallback(statsDiv.querySelector(".avatar"), profile.username);
-      container.appendChild(statsDiv);
-    }
-
-    async function uploadProfileImage(file) {
-      const ext = (file.name.split(".").pop() || "png").toLowerCase();
-      const path = `profiles/${username}-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from(BUCKET_NAME).upload(path, file, {
-        cacheControl: "3600",
-        upsert: true,
-        contentType: file.type || "image/png"
-      });
-      if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
-      return data.publicUrl;
-    }
-
-    function makePfpCanvas() {
-      const wrap = document.createElement("div");
-      wrap.style.cssText = "display:flex;gap:12px;align-items:center;flex-wrap:wrap;";
-      const canvas = document.createElement("canvas");
-      canvas.width = 192;
-      canvas.height = 192;
-      canvas.style.cssText = "width:128px;height:128px;border-radius:50%;background:#40444b;border:2px solid #7289da;cursor:crosshair;touch-action:none;";
-      const label = document.createElement("div");
-      label.style.cssText = "font-size:13px;color:#bbb;max-width:170px;line-height:1.4;";
-      label.textContent = "Draw on the circle, or load an image, then save it as your profile picture.";
-      const controls = document.createElement("div");
-      controls.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;";
-      const clearBtn = document.createElement("button");
-      clearBtn.type = "button";
-      clearBtn.textContent = "Clear";
-      clearBtn.className = "cancel-btn";
-      const loadBtn = document.createElement("button");
-      loadBtn.type = "button";
-      loadBtn.textContent = "Load Image";
-      const file = document.createElement("input");
-      file.type = "file";
-      file.accept = "image/*";
-      file.style.display = "none";
-      controls.append(clearBtn, loadBtn, file);
-      wrap.append(canvas, label, controls);
-      return { wrap, canvas, clearBtn, loadBtn, file };
-    }
-
-    async function openProfileEditor() {
-      const { data: profile } = await supabase.from("profiles").select("username, profile_picture").eq("username", username).single();
-      const overlay = document.createElement("div");
-      overlay.className = "profile-overlay";
-      overlay.innerHTML = `
-        <div class="profile-modal">
-          <h3>Edit Profile</h3>
+    function createPfpEditor(profile){
+      return `
+        <div style="padding:18px;color:#fff">
+          <h3 style="margin-top:0">Edit Profile</h3>
+          <div class="profile-field"><label>Username</label><input id="profileUsername" type="text" value="${profile.username}"></div>
           <div class="profile-field">
-            <label for="profileUsername">Username</label>
-            <input id="profileUsername" type="text" value="${profile?.username || username}" />
+            <label>Draw your PFP</label>
+            <canvas id="pfpCanvas" width="256" height="256" style="width:180px;height:180px;border-radius:50%;background:#40444b;border:2px solid #7289da;display:block"></canvas>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+              <button id="clearPfp" class="cancel-btn">Clear</button>
+              <button id="loadPfp">Load Image</button>
+              <input id="pfpFile" type="file" accept="image/*" hidden>
+            </div>
           </div>
-          <div class="profile-field" id="pfpArea"></div>
-          <div class="profile-actions">
-            <button id="saveProfileBtn">Save</button>
-            <button id="cancelProfileBtn" class="cancel-btn">Cancel</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(overlay);
+          <div class="profile-actions"><button id="saveProfileBtn">Save</button><button id="cancelProfileBtn" class="cancel-btn">Cancel</button></div>
+        </div>`;
+    }
 
-      const pfpArea = overlay.querySelector("#pfpArea");
-      const picker = makePfpCanvas();
-      pfpArea.appendChild(picker.wrap);
-      const ctx = picker.canvas.getContext("2d");
-      let drawing = false;
-      let lastX = 0;
-      let lastY = 0;
-      let hasStroke = false;
-
-      const drawBase = () => {
-        ctx.clearRect(0, 0, picker.canvas.width, picker.canvas.height);
-        ctx.fillStyle = "#40444b";
-        ctx.beginPath();
-        ctx.arc(picker.canvas.width / 2, picker.canvas.height / 2, picker.canvas.width / 2 - 4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(picker.canvas.width / 2, picker.canvas.height / 2, picker.canvas.width / 2 - 4, 0, Math.PI * 2);
-        ctx.clip();
-        if (profile?.profile_picture) {
-          const img = new Image();
-          img.crossOrigin = "anonymous";
-          img.onload = () => ctx.drawImage(img, 0, 0, picker.canvas.width, picker.canvas.height);
-          img.src = profile.profile_picture;
-        }
-        ctx.restore();
+    function openProfileEditor(){
+      const s=loadStore(); const p=s.profiles[username];
+      const o=openOverlay('Edit Profile', createPfpEditor(p));
+      const canvas=o.querySelector('#pfpCanvas'); const ctx=canvas.getContext('2d');
+      let drawing=false, lastX=0, lastY=0, hasDrawn=false;
+      const drawBase=()=>{
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle='#40444b'; ctx.beginPath(); ctx.arc(128,128,124,0,Math.PI*2); ctx.fill();
+        if(p.profile_picture){ const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,256,256); img.src=p.profile_picture; }
       };
-
       drawBase();
-
-      const getPoint = (e) => {
-        const rect = picker.canvas.getBoundingClientRect();
-        const p = e.touches ? e.touches[0] : e;
-        return {
-          x: (p.clientX - rect.left) * (picker.canvas.width / rect.width),
-          y: (p.clientY - rect.top) * (picker.canvas.height / rect.height)
-        };
-      };
-
-      const start = (e) => {
-        drawing = true;
-        const p = getPoint(e);
-        lastX = p.x;
-        lastY = p.y;
-      };
-
-      const draw = (e) => {
-        if (!drawing) return;
-        const p = getPoint(e);
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(picker.canvas.width / 2, picker.canvas.height / 2, picker.canvas.width / 2 - 4, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.lineWidth = 8;
-        ctx.strokeStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
-        ctx.lineTo(p.x, p.y);
-        ctx.stroke();
-        ctx.restore();
-        lastX = p.x;
-        lastY = p.y;
-        hasStroke = true;
-      };
-
-      const end = () => { drawing = false; };
-      picker.canvas.addEventListener("mousedown", start);
-      picker.canvas.addEventListener("mousemove", draw);
-      window.addEventListener("mouseup", end, { once: false });
-      picker.canvas.addEventListener("touchstart", start, { passive: true });
-      picker.canvas.addEventListener("touchmove", draw, { passive: true });
-      window.addEventListener("touchend", end, { once: false });
-
-      picker.clearBtn.onclick = () => {
-        drawBase();
-        hasStroke = false;
-      };
-
-      picker.loadBtn.onclick = () => picker.file.click();
-      picker.file.onchange = () => {
-        const f = picker.file.files?.[0];
-        if (!f) return;
-        const img = new Image();
-        img.onload = () => {
-          drawBase();
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(picker.canvas.width / 2, picker.canvas.height / 2, picker.canvas.width / 2 - 4, 0, Math.PI * 2);
-          ctx.clip();
-          ctx.drawImage(img, 0, 0, picker.canvas.width, picker.canvas.height);
-          ctx.restore();
-          hasStroke = true;
-        };
-        img.src = URL.createObjectURL(f);
-      };
-
-      overlay.querySelector("#cancelProfileBtn").onclick = () => overlay.remove();
-      overlay.querySelector("#saveProfileBtn").onclick = async () => {
-        try {
-          const newUsername = overlay.querySelector("#profileUsername").value.trim();
-          let newProfilePicture = profile?.profile_picture || null;
-          if (hasStroke) {
-            newProfilePicture = picker.canvas.toDataURL("image/png");
-          }
-
-          const updates = { profile_picture: newProfilePicture };
-          if (newUsername && newUsername !== username) updates.username = newUsername;
-
-          const { error } = await supabase.from("profiles").update(updates).eq("username", username);
-          if (error) {
-            alert("Failed to update profile.");
-            return;
-          }
-
-          if (newUsername && newUsername !== username) {
-            username = newUsername;
-            localStorage.setItem("username", username);
-          }
-
-          overlay.remove();
-          alert("Profile updated!");
-          if (currentChannel === "stats") await loadStats();
-          else await loadMessagesForChannel(currentChannel);
-        } catch (e) {
-          alert(e.message || "Upload failed.");
-        }
+      const point=e=>{const r=canvas.getBoundingClientRect(); const t=e.touches?e.touches[0]:e; return {x:(t.clientX-r.left)*(canvas.width/r.width), y:(t.clientY-r.top)*(canvas.height/r.height)}};
+      canvas.onmousedown=e=>{drawing=true; ({x:lastX,y:lastY}=point(e));};
+      canvas.onmousemove=e=>{ if(!drawing) return; const p2=point(e); ctx.save(); ctx.beginPath(); ctx.arc(128,128,124,0,Math.PI*2); ctx.clip(); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.lineWidth=10; ctx.strokeStyle='#fff'; ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(p2.x,p2.y); ctx.stroke(); ctx.restore(); lastX=p2.x; lastY=p2.y; hasDrawn=true; };
+      window.onmouseup=()=>drawing=false;
+      canvas.ontouchstart=e=>{drawing=true; ({x:lastX,y:lastY}=point(e));};
+      canvas.ontouchmove=e=>{ if(!drawing) return; const p2=point(e); ctx.save(); ctx.beginPath(); ctx.arc(128,128,124,0,Math.PI*2); ctx.clip(); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.lineWidth=10; ctx.strokeStyle='#fff'; ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(p2.x,p2.y); ctx.stroke(); ctx.restore(); lastX=p2.x; lastY=p2.y; hasDrawn=true; };
+      window.ontouchend=()=>drawing=false;
+      o.querySelector('#clearPfp').onclick=()=>{drawBase(); hasDrawn=false;};
+      o.querySelector('#loadPfp').onclick=()=>o.querySelector('#pfpFile').click();
+      o.querySelector('#pfpFile').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const img=new Image(); img.onload=()=>{ ctx.clearRect(0,0,256,256); ctx.drawImage(img,0,0,256,256); hasDrawn=true; }; img.src=URL.createObjectURL(f); };
+      o.querySelector('#cancelProfileBtn').onclick=()=>o.remove();
+      o.querySelector('#saveProfileBtn').onclick=()=>{
+        const newName=o.querySelector('#profileUsername').value.trim() || username;
+        const dataURL = hasDrawn ? canvas.toDataURL('image/png') : p.profile_picture;
+        const s2=loadStore();
+        s2.profiles[newName] = { ...s2.profiles[username], username:newName, profile_picture:dataURL };
+        if(newName!==username){ delete s2.profiles[username]; s2.messages.forEach(m=>{ if(m.username===username) m.username=newName; }); username=newName; localStorage.setItem('username', username); }
+        saveStore(s2); o.remove();
+        if(currentChannel==='stats') loadStats(); else loadMessages(currentChannel);
+        alert('Profile updated!');
       };
     }
 
-    function switchChannel(channel) {
-      currentChannel = channel;
-      $("channelName").innerText = channel === "stats" ? "# stats" : channel === "shop" ? "# shop" : "# " + channel;
-      $("messageInput").placeholder = (channel === "stats" || channel === "shop") ? "" : "Message #" + channel;
-      $("messages").innerHTML = "";
-      if (channel === "stats") loadStats();
-      else if (channel === "shop") loadShop();
-      else loadMessagesForChannel(channel);
+    function switchChannel(channel){ currentChannel=channel; renderChannelHeader(channel); $('messages').innerHTML=''; if(channel==='stats') loadStats(); else if(channel==='shop') loadShop(); else loadMessages(channel); }
+
+    function loadShop(){
+      const s=loadStore(); const p=s.profiles[username]; $('messages').innerHTML='';
+      const mk=(title,owned,buyText,playId,buyId,cost)=>{
+        const div=document.createElement('div'); div.className='message'; div.innerHTML = owned ? `<strong>${title}</strong><br><button class="shop-btn" id="${playId}">Play (Fullscreen)</button>` : `<strong>${title}</strong><br>Cost: ${cost} coins<br><button class="shop-btn" id="${buyId}">${buyText}</button>`; $('messages').appendChild(div);
+      };
+      mk('🐍 Snake Game', p.owned_snake, 'Buy Snake (25 coins)', 'playSnakeBtn', 'buySnakeBtn', 25);
+      mk('📈 Slope Game', p.owned_slope, 'Buy Slope (50 coins)', 'playSlopeBtn', 'buySlopeBtn', 50);
+      if(p.owned_snake) $('playSnakeBtn').onclick = openSnakeFullscreen; else $('buySnakeBtn').onclick = ()=>{ const s2=loadStore(); const p2=s2.profiles[username]; if(p2.coins<25) return alert('You need 25 coins to buy Snake!'); p2.coins-=25; p2.owned_snake=true; saveStore(s2); alert('You bought Snake!'); loadShop(); openSnakeFullscreen(); };
+      if(p.owned_slope) $('playSlopeBtn').onclick = openSlopeFullscreen; else $('buySlopeBtn').onclick = ()=>{ const s2=loadStore(); const p2=s2.profiles[username]; if(p2.coins<50) return alert('You need 50 coins to buy Slope!'); p2.coins-=50; p2.owned_slope=true; saveStore(s2); alert('You bought Slope!'); loadShop(); openSlopeFullscreen(); };
     }
 
-    async function loadShop() {
-      const c = $("messages");
-      c.innerHTML = "Loading shop...";
-      const { data: profile } = await supabase.from("profiles").select("coins, owned_snake, owned_slope").eq("username", username).single();
-      c.innerHTML = "";
+    function openSnakeFullscreen(){ openOverlay('Snake', `<iframe src="https://frogdafish.github.io/Snek"></iframe>`); }
+    function openSlopeFullscreen(){ openOverlay('Slope', `<iframe src="slope.html"></iframe>`); }
 
-      const snake = document.createElement("div");
-      snake.className = "message";
-      snake.style.marginBottom = "20px";
-      snake.innerHTML = profile?.owned_snake
-        ? `<strong>🐍 Snake Game</strong><br>Play the classic Snake game!<br><button id="playSnakeBtn" class="shop-btn">Play Snake (Fullscreen)</button>`
-        : `<strong>🐍 Snake Game</strong><br>Play the classic Snake game! Cost: 25 coins<br><button id="buySnakeBtn" class="shop-btn">Buy Snake (25 coins)</button>`;
-      c.appendChild(snake);
-
-      const slope = document.createElement("div");
-      slope.className = "message";
-      slope.innerHTML = profile?.owned_slope
-        ? `<strong>📈 Slope Game</strong><br>Fast-paced endless runner down a slope!<br><button id="playSlopeBtn" class="shop-btn">Play Slope (Fullscreen)</button>`
-        : `<strong>📈 Slope Game</strong><br>Fast-paced endless runner down a slope! Cost: 50 coins<br><button id="buySlopeBtn" class="shop-btn">Buy Slope (50 coins)</button>`;
-      c.appendChild(slope);
-
-      if (profile?.owned_snake) {
-        $("playSnakeBtn").onclick = openSnakeFullscreen;
-      } else {
-        $("buySnakeBtn").onclick = async () => {
-          const { data: p } = await supabase.from("profiles").select("coins, owned_snake").eq("username", username).single();
-          if (!p) return;
-          if (p.owned_snake) return loadShop();
-          if (p.coins < 25) return alert("You need 25 coins to buy Snake!");
-          const { error } = await supabase.from("profiles").update({ coins: p.coins - 25, owned_snake: true }).eq("username", username);
-          if (error) return alert("Purchase failed.");
-          alert("You bought Snake! Opening...");
-          openSnakeFullscreen();
-          await loadShop();
-        };
-      }
-
-      if (profile?.owned_slope) {
-        $("playSlopeBtn").onclick = openSlopeFullscreen;
-      } else {
-        $("buySlopeBtn").onclick = async () => {
-          const { data: p } = await supabase.from("profiles").select("coins, owned_slope").eq("username", username).single();
-          if (!p) return;
-          if (p.owned_slope) return loadShop();
-          if (p.coins < 50) return alert("You need 50 coins to buy Slope!");
-          const { error } = await supabase.from("profiles").update({ coins: p.coins - 50, owned_slope: true }).eq("username", username);
-          if (error) return alert("Purchase failed.");
-          alert("You bought Slope! Opening...");
-          openSlopeFullscreen();
-          await loadShop();
-        };
-      }
-    }
-
-    function createOverlay(id, frameSrc) {
-      let overlay = document.getElementById(id);
-      if (overlay) return overlay;
-      overlay = document.createElement("div");
-      overlay.id = id;
-      overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;overflow:hidden;";
-      const closeBtn = document.createElement("button");
-      closeBtn.textContent = "❌";
-      closeBtn.style.cssText = "position:absolute;top:8px;right:15px;width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;background:#7289da;color:white;font-size:20px;font-weight:bold;z-index:10000;display:flex;align-items:center;justify-content:center;";
-      closeBtn.onclick = () => overlay.remove();
-      const frame = document.createElement("iframe");
-      frame.src = frameSrc;
-      frame.style.cssText = "position:absolute;inset:0;width:100vw;height:100vh;border:none;display:block;";
-      overlay.append(closeBtn, frame);
-      document.body.appendChild(overlay);
-      return overlay;
-    }
-
-    function openSnakeFullscreen() { createOverlay("snake-fullscreen-overlay", "https://frogdafish.github.io/Snek"); }
-    function openSlopeFullscreen() { createOverlay("slope-fullscreen-overlay", "slope.html"); }
-
-    init();
+    $('sendBtn').addEventListener('click', sendMessage);
+    $('messageInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendMessage(); });
+    $('editProfileBtn').addEventListener('click', openProfileEditor);
+    document.querySelectorAll('.channel').forEach(el=>el.addEventListener('click', ()=>switchChannel(el.dataset.channel)));
+    renderChannelHeader('general');
+    ensureProfile();
+    loadMessages('general');
   </script>
 </body>
 </html>
