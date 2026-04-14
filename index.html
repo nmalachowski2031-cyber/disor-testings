@@ -136,12 +136,23 @@
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkcnVzdHR1aWNvZ2tlcGxyY2FjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5NDQxMjUsImV4cCI6MjA4NjUyMDEyNX0.XnfYHjY0lR5JMBX855xsOtiC44oOW_bRtZbGmSo8ZB0"
       );
 
+      const BUCKET_NAME = "profile-pictures";
+
       let username = localStorage.getItem("username") || "";
       let currentChannel = "general";
 
       if (!username) {
         while (!username) username = prompt("Enter username:");
         localStorage.setItem("username", username);
+      }
+
+      async function ensureProfileBucket() {
+        const { data: buckets, error } = await supabase.storage.listBuckets();
+        if (error) throw error;
+
+        const bucket = (buckets || []).find(b => b.name === BUCKET_NAME);
+        if (!bucket) throw new Error(`Bucket ${BUCKET_NAME} does not exist`);
+        if (!bucket.public) throw new Error(`Bucket ${BUCKET_NAME} exists but is not public`);
       }
 
       await supabase.from("profiles").upsert({
@@ -161,7 +172,7 @@
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=7289da&color=fff&rounded=true&size=64`;
       }
 
-      function safeAvatar(img, fallbackName) {
+      function setAvatarFallback(img, fallbackName) {
         img.onerror = () => {
           img.onerror = null;
           img.src = getFallbackAvatar(fallbackName);
@@ -181,7 +192,7 @@
           </div>
         `;
         const avatar = div.querySelector(".avatar");
-        safeAvatar(avatar, usernameText);
+        setAvatarFallback(avatar, usernameText);
         const container = document.getElementById("messages");
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
@@ -293,23 +304,61 @@
           </div>
         `;
         const avatar = statsDiv.querySelector(".avatar");
-        safeAvatar(avatar, profile.username);
+        setAvatarFallback(avatar, profile.username);
         container.appendChild(statsDiv);
       }
 
       function createSnakeOverlay() {
         let overlay = document.getElementById("snake-fullscreen-overlay");
         if (overlay) return overlay;
+
         overlay = document.createElement("div");
         overlay.id = "snake-fullscreen-overlay";
-        overlay.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.9);z-index:9999;overflow:hidden;";
+        overlay.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background: rgba(0, 0, 0, 0.9);
+          z-index: 9999;
+          overflow: hidden;
+        `;
+
         const closeBtn = document.createElement("button");
         closeBtn.textContent = "❌";
-        closeBtn.style.cssText = "position:absolute;top:8px;right:15px;width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;background:#7289da;color:white;font-size:20px;font-weight:bold;z-index:10000;display:flex;align-items:center;justify-content:center;";
+        closeBtn.style.cssText = `
+          position: absolute;
+          top: 8px;
+          right: 15px;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          border: none;
+          cursor: pointer;
+          background: #7289da;
+          color: white;
+          font-size: 20px;
+          font-weight: bold;
+          z-index: 10000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        `;
         closeBtn.onclick = () => overlay.remove();
+
         const frame = document.createElement("iframe");
         frame.src = "https://frogdafish.github.io/Snek";
-        frame.style.cssText = "position:absolute;top:0;left:0;width:100vw;height:100vh;border:none;display:block;";
+        frame.style.cssText = `
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          border: none;
+          display: block;
+        `;
+
         overlay.appendChild(closeBtn);
         overlay.appendChild(frame);
         document.body.appendChild(overlay);
@@ -319,16 +368,54 @@
       function createSlopeOverlay() {
         let overlay = document.getElementById("slope-fullscreen-overlay");
         if (overlay) return overlay;
+
         overlay = document.createElement("div");
         overlay.id = "slope-fullscreen-overlay";
-        overlay.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.9);z-index:9999;overflow:hidden;";
+        overlay.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background: rgba(0, 0, 0, 0.9);
+          z-index: 9999;
+          overflow: hidden;
+        `;
+
         const closeBtn = document.createElement("button");
         closeBtn.textContent = "❌";
-        closeBtn.style.cssText = "position:absolute;top:8px;right:15px;width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;background:#7289da;color:white;font-size:20px;font-weight:bold;z-index:10000;display:flex;align-items:center;justify-content:center;";
+        closeBtn.style.cssText = `
+          position: absolute;
+          top: 8px;
+          right: 15px;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          border: none;
+          cursor: pointer;
+          background: #7289da;
+          color: white;
+          font-size: 20px;
+          font-weight: bold;
+          z-index: 10000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        `;
         closeBtn.onclick = () => overlay.remove();
+
         const frame = document.createElement("iframe");
         frame.src = "slope.html";
-        frame.style.cssText = "position:absolute;top:0;left:0;width:100vw;height:100vh;border:none;display:block;";
+        frame.style.cssText = `
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          border: none;
+          display: block;
+        `;
+
         overlay.appendChild(closeBtn);
         overlay.appendChild(frame);
         document.body.appendChild(overlay);
@@ -429,11 +516,13 @@
       }
 
       async function uploadProfileImage(file) {
+        await ensureProfileBucket();
+
         const ext = (file.name.split(".").pop() || "png").toLowerCase();
         const path = `profiles/${username}-${Date.now()}.${ext}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("profile-pictures")
+          .from(BUCKET_NAME)
           .upload(path, file, {
             cacheControl: "3600",
             upsert: true,
@@ -443,7 +532,7 @@
         if (uploadError) throw uploadError;
 
         const { data } = supabase.storage
-          .from("profile-pictures")
+          .from(BUCKET_NAME)
           .getPublicUrl(path);
 
         return data.publicUrl;
@@ -485,7 +574,7 @@
         const preview = document.getElementById("profilePreview");
 
         if (profile?.profile_picture) preview.style.display = "block";
-        safeAvatar(preview, profile?.username || username);
+        setAvatarFallback(preview, profile?.username || username);
 
         fileInput.addEventListener("change", () => {
           const file = fileInput.files?.[0];
@@ -539,7 +628,7 @@
               await loadMessagesForChannel(currentChannel);
             }
           } catch (e) {
-            alert("Upload failed. Make sure the bucket exists, is public, and the returned URL is correct.");
+            alert(e.message || "Upload failed. Make sure the bucket exists and is public.");
           }
         };
       }
