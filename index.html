@@ -41,7 +41,7 @@
     .overlay-box{width:min(980px,96vw);height:min(680px,92vh);background:#1e1f22;border-radius:12px;position:relative;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.35)}
     .overlay-box iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
     .close-btn{position:absolute;top:10px;right:10px;z-index:10001;width:40px;height:40px;border-radius:50%;border:none;background:#7289da;color:#fff;font-size:20px}
-    canvas{touch-action:none}
+    canvas{touch-action:none;cursor:crosshair}
   </style>
 </head>
 <body>
@@ -77,9 +77,19 @@
     const getFallbackAvatar = n => `https://ui-avatars.com/api/?name=${encodeURIComponent(n)}&background=7289da&color=fff&rounded=true&size=64`;
     const setAvatarFallback = (img, n) => img.onerror = () => { img.onerror = null; img.src = getFallbackAvatar(n); };
 
+    function parseRGB(colorStr) {
+      if (!colorStr || !colorStr.includes('rgb')) return {r:255, g:255, b:255};
+      const match = colorStr.match(/rgb\((\d+),(\d+),(\d+)\)/);
+      return {
+        r: parseInt(match?.[1] || '255'),
+        g: parseInt(match?.[2] || '255'), 
+        b: parseInt(match?.[3] || '255')
+      };
+    }
+
     function ensureProfile(){
       const s=loadStore();
-      if(!s.profiles[username]) s.profiles[username]={username, xp:0, level:1, coins:0, profile_picture:null, muted_until:null, mute_reason:null, owned_snake:false, owned_slope:false};
+      if(!s.profiles[username]) s.profiles[username]={username, xp:0, level:1, coins:0, profile_picture:null, muted_until:null, mute_reason:null, owned_snake:false, owned_slope:false, pfp_brush_color:'rgb(255,255,255)', pfp_brush_width:10};
       saveStore(s);
     }
 
@@ -182,6 +192,7 @@
     }
 
     function createPfpEditor(profile){
+      const rgb = parseRGB(profile.pfp_brush_color);
       return `
         <div style="padding:18px;color:#fff">
           <h3 style="margin-top:0">Edit Profile</h3>
@@ -195,9 +206,9 @@
           <div class="profile-field">
             <label>Brush Color (RGB)</label>
             <div class="rgb-row">
-              <input id="rInput" type="number" min="0" max="255" value="${Math.max(0, Math.min(255, profile.pfp_brush_color ? parseInt(profile.pfp_brush_color.match(/(\d+),(\d+),(\d+)/)?.[1] || 255, 10) : 255))}" placeholder="R">
-              <input id="gInput" type="number" min="0" max="255" value="${Math.max(0, Math.min(255, profile.pfp_brush_color ? parseInt(profile.pfp_brush_color.match(/(\d+),(\d+),(\d+)/)?.[2] || 255, 10) : 255))}" placeholder="G">
-              <input id="bInput" type="number" min="0" max="255" value="${Math.max(0, Math.min(255, profile.pfp_brush_color ? parseInt(profile.pfp_brush_color.match(/(\d+),(\d+),(\d+)/)?.[3] || 255, 10) : 255))}" placeholder="B">
+              <input id="rInput" type="number" min="0" max="255" value="${rgb.r}">
+              <input id="gInput" type="number" min="0" max="255" value="${rgb.g}">
+              <input id="bInput" type="number" min="0" max="255" value="${rgb.b}">
               <button id="applyRGBBtn">Apply</button>
             </div>
           </div>
@@ -210,7 +221,7 @@
 
           <div class="profile-field">
             <label>Draw your PFP</label>
-            <canvas id="pfpCanvas" width="256" height="256" style="width:180px;height:180px;border-radius:50%;background:#40444b;border:2px solid #7289da;display:block;cursor:crosshair"></canvas>
+            <canvas id="pfpCanvas" width="256" height="256" style="width:180px;height:180px;border-radius:50%;background:#40444b;border:2px solid #7289da;display:block"></canvas>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
               <button id="clearPfp" class="cancel-btn">Clear</button>
               <button id="loadPfp">Load Image</button>
@@ -266,7 +277,7 @@
             ctx.restore();
             loaded = true;
           };
-          img.onerror = () => loaded = true; // Prevent infinite loading
+          img.onerror = () => loaded = true;
           img.src = p.profile_picture;
         }
       };
@@ -275,28 +286,34 @@
 
       bgPicker.addEventListener('input', drawBase);
 
-      applyRGBBtn.addEventListener('click', () => {
+      // Update brush color live as user types RGB values
+      const updateBrushColor = () => {
         const r = Math.min(Math.max(parseInt(rEl.value || 0), 0), 255);
         const g = Math.min(Math.max(parseInt(gEl.value || 0), 0), 255);
         const b = Math.min(Math.max(parseInt(bEl.value || 0), 0), 255);
         brushColor = `rgb(${r},${g},${b})`;
-      });
+      };
+
+      rEl.addEventListener('input', updateBrushColor);
+      gEl.addEventListener('input', updateBrushColor);
+      bEl.addEventListener('input', updateBrushColor);
+      applyRGBBtn.addEventListener('click', updateBrushColor);
 
       brushSizeSlider.addEventListener('input', () => {
         lineWidth = parseInt(brushSizeSlider.value, 10);
         brushSizeValue.textContent = `${lineWidth}px`;
       });
 
-      const point = e => {
-        const r = canvas.getBoundingClientRect();
-        const t = e.touches ? e.touches[0] : e;
+      const getPoint = e => {
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : e;
         return {
-          x: (t.clientX - r.left) * (canvas.width / r.width),
-          y: (t.clientY - r.top) * (canvas.height / r.height)
+          x: (touch.clientX - rect.left) * (canvas.width / rect.width),
+          y: (touch.clientY - rect.top) * (canvas.height / rect.height)
         };
       };
 
-      const stroke = p2 => {
+      const startStroke = point => {
         ctx.save();
         ctx.beginPath();
         ctx.arc(128, 128, 124, 0, Math.PI * 2);
@@ -305,66 +322,65 @@
         ctx.lineJoin = 'round';
         ctx.lineWidth = lineWidth;
         ctx.strokeStyle = brushColor;
-        ctx.lineTo(p2.x, p2.y);
+        ctx.beginPath();
+        ctx.moveTo(point.x, point.y);
+        ctx.restore();
+      };
+
+      const continueStroke = point => {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(128, 128, 124, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = lineWidth;
+        ctx.strokeStyle = brushColor;
+        ctx.lineTo(point.x, point.y);
         ctx.stroke();
         ctx.restore();
       };
 
       canvas.onmousedown = e => {
+        e.preventDefault();
         drawing = true;
-        const p2 = point(e);
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(128, 128, 124, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.lineWidth = lineWidth;
-        ctx.strokeStyle = brushColor;
-        ctx.beginPath();
-        ctx.moveTo(p2.x, p2.y);
-        ctx.restore();
-        ({ x: lastX, y: lastY } = p2);
+        const point = getPoint(e);
+        startStroke(point);
+        lastX = point.x;
+        lastY = point.y;
         hasDrawn = true;
       };
 
       canvas.onmousemove = e => {
         if (!drawing) return;
-        const p2 = point(e);
-        stroke(p2);
-        ({ x: lastX, y: lastY } = p2);
+        const point = getPoint(e);
+        continueStroke(point);
+        lastX = point.x;
+        lastY = point.y;
       };
 
-      window.onmouseup = () => drawing = false;
+      document.onmouseup = () => drawing = false;
 
       canvas.ontouchstart = e => {
         e.preventDefault();
         drawing = true;
-        const p2 = point(e);
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(128, 128, 124, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.lineWidth = lineWidth;
-        ctx.strokeStyle = brushColor;
-        ctx.beginPath();
-        ctx.moveTo(p2.x, p2.y);
-        ctx.restore();
-        ({ x: lastX, y: lastY } = p2);
+        const point = getPoint(e);
+        startStroke(point);
+        lastX = point.x;
+        lastY = point.y;
         hasDrawn = true;
       };
 
       canvas.ontouchmove = e => {
         e.preventDefault();
         if (!drawing) return;
-        const p2 = point(e);
-        stroke(p2);
-        ({ x: lastX, y: lastY } = p2);
+        const point = getPoint(e);
+        continueStroke(point);
+        lastX = point.x;
+        lastY = point.y;
       };
 
-      window.ontouchend = () => drawing = false;
+      document.ontouchend = () => drawing = false;
 
       o.querySelector('#clearPfp').onclick = () => {
         hasDrawn = false;
@@ -375,8 +391,8 @@
       o.querySelector('#loadPfp').onclick = () => o.querySelector('#pfpFile').click();
 
       o.querySelector('#pfpFile').onchange = e => {
-        const f = e.target.files[0];
-        if (!f) return;
+        const file = e.target.files[0];
+        if (!file) return;
         const img = new Image();
         img.onload = () => {
           ctx.clearRect(0, 0, 256, 256);
@@ -389,7 +405,7 @@
           hasDrawn = true;
           loaded = true;
         };
-        img.src = URL.createObjectURL(f);
+        img.src = URL.createObjectURL(file);
       };
 
       o.querySelector('#cancelProfileBtn').onclick = () => o.remove();
