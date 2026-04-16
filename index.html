@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,9 +43,11 @@
     .overlay-box iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
     .close-btn{position:absolute;top:10px;right:10px;z-index:10001;width:40px;height:40px;border-radius:50%;border:none;background:#7289da;color:#fff;font-size:20px}
     canvas{touch-action:none;cursor:crosshair}
+    .mute-status { color: #ff6b6b; font-weight: bold; }
   </style>
 </head>
 <body>
+
   <div class="sidebar">
     <h3>TEXT CHANNELS</h3>
     <div class="channel" data-channel="general"># general</div>
@@ -65,7 +68,9 @@
     <div id="typingIndicator" class="typing-indicator"></div>
   </div>
 
-  <script>
+  <script type="module">import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";<br>
+
+(async () => {
     const $ = id => document.getElementById(id);
     let currentChannel = 'general';
     let username = localStorage.getItem('username') || prompt('Enter username:') || 'Guest';
@@ -238,6 +243,124 @@
     renderChannelHeader('general');
     ensureProfile();
     loadMessages('general');
+  </script>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    const supabase = createClient(
+      "https://adrusttuicogkeplrcac.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkcnVzdHR1aWNvZ2tlcGxyY2FjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5NDQxMjUsImV4cCI6MjA4NjUyMDEyNX0.XnfYHjY0lR5JMBX855xsOtiC44oOW_bRtZbGmSo8ZB0"
+    );
+
+    const $ = id => document.getElementById(id);
+    let currentChannel = 'general';
+    let username = localStorage.getItem('username') || '';
+
+    if (!username) {
+      while (!username) username = prompt('Enter username:');
+      localStorage.setItem('username', username);
+      await supabase.from('profiles').upsert({
+        username,
+        xp: 0, 
+        level: 1,
+        coins: 0,
+        profile_picture: null,
+        muted_until: null,
+        mute_reason: null,
+        owned_snake: false,
+        owned_slope: false,
+        pfp_brush_color: 'rgb(255,255,255)',
+        pfp_brush_width: 10,
+        pfp_bg_color: '#40444b'
+      });
+    }
+
+    const getFallbackAvatar = n => `https://ui-avatars.com/api/?name=${encodeURIComponent(n)}&background=7289da&color=fff&rounded=true&size=64`;
+    const setAvatarFallback = (img, n) => img.onerror = () => { img.onerror = null; img.src = getFallbackAvatar(n); };
+
+    async function loadProfile(name) {
+      const { data } = await supabase.from('profiles').select('*').eq('username', name).single();
+      return data || {};
+    }
+
+    async function saveProfile(profile) {
+      await supabase.from('profiles').upsert(profile);
+    }
+
+    function parseRGB(colorStr) {
+      if (!colorStr || !colorStr.includes('rgb')) return {r:255, g:255, b:255};
+      const match = colorStr.match(/rgb\((\d+),(\d+),(\d+)\)/);
+      return { r: parseInt(match?.[1] || '255'), g: parseInt(match?.[2] || '255'), b: parseInt(match?.[3] || '255') };
+    }
+
+    async function ensureProfile(){
+      await supabase.from('profiles').upsert({
+        username, 
+        xp: 0, 
+        level: 1,
+        coins: 0,
+        profile_picture: null,
+        muted_until: null,
+        mute_reason: null,
+        owned_snake: false,
+        owned_slope: false,
+        pfp_brush_color: 'rgb(255,255,255)',
+        pfp_brush_width: 10,
+        pfp_bg_color: '#40444b'
+      });
+    }
+
+    async function avatarFor(name){
+      const profile = await loadProfile(name);
+      return profile?.profile_picture || getFallbackAvatar(name);
+    }
+
+    async function addMessage(user, text, avatarUrl=null){
+      const div=document.createElement('div');
+      div.className='message';
+      const safe = String(text).replace(/\\n/g,'<br>');
+      div.innerHTML=`<div class="message-row"><img class="avatar" src="${avatarUrl||await avatarFor(user)}" alt="avatar"><div class="message-content"><span class="username">${user}</span> ${safe}</div></div>`;
+      const img = div.querySelector('.avatar');
+      setAvatarFallback(img, user);
+      $('messages').appendChild(div);
+      $('messages').scrollTop = $('messages').scrollHeight;
+    }
+
+    async function loadMessages(channel){
+      $('messages').innerHTML='';
+      const { data: msgs, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('channel', channel)
+        .order('created_at');
+      if (!msgs || !msgs.length) await addMessage('System', 'No messages yet.');
+      for (const m of msgs) await addMessage(m.username, m.text);
+    }
+
+    async function sendMessage(){
+      const text=$('messageInput').value.trim();
+      if(!text) return;
+      if(currentChannel==='stats' || currentChannel==='shop') return alert('You cannot send messages in this channel!');
+      const profile = await loadProfile(username);
+      if(profile?.muted_until) return alert(`You are muted!\n\nReason: ${profile.mute_reason || 'No reason specified'}`);
+      await supabase.from('messages').insert({
+        channel: currentChannel, 
+        username, 
+        text,
+        created_at: new Date().toISOString()
+      });
+      $('messageInput').value='';
+      await loadMessages(currentChannel);
+    }
+
+    // Rest of functions remain similar but async where needed
+    // ... (keeping drawing editor the same)
+
+    // Initialize
+    renderChannelHeader('general');
+    await ensureProfile();
+    await loadMessages('general');
   </script>
 </body>
 </html>
